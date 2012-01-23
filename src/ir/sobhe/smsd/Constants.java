@@ -4,4 +4,5 @@ public class Constants {
 	public static final String flask = "http://192.168.1.3:5000/";
 	public static final String fetch_url = flask + "get/";
 	public static final int fetch_interval = 1000;
+	public static final int sender_interval = 100;
 }

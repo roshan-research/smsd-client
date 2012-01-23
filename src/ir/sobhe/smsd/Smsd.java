@@ -27,7 +27,9 @@ public class Smsd extends Activity {
 	private TextView tv;
 	Handler handel;
 	Runnable fetcherRunnable = new FetcherRunnable();
+	Runnable senderRunnable = new SenderRunnable();
 	Thread fetcher;
+	Thread sender;
 	
     /** Called when the activity is first created. */
     @Override
@@ -38,6 +40,7 @@ public class Smsd extends Activity {
         tv = (TextView) findViewById(R.id.tv);
         handel = new Handler();
         fetcher = new Thread(fetcherRunnable);
+        sender = new Thread(senderRunnable);
     }
     
     @Override
@@ -100,7 +103,9 @@ public class Smsd extends Activity {
 					JSONArray messages = json.getJSONArray("messages");
 					
 					if (messages.length() > 0) {
-						//Put the messages in database
+						for(int j = 0; j < messages.length(); j++){
+							
+						}
 					}
 				}
 				catch(ClientProtocolException e){
@@ -111,6 +116,32 @@ public class Smsd extends Activity {
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
+				try {
+					Thread.sleep(Constants.fetch_interval);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
+    }
+    
+    class SenderRunnable implements Runnable{
+
+		@Override
+		public void run() {
+			int i = 0;
+			while(true){
+				i++;
+				if (i == 1) {
+					handel.post(new Runnable() {
+						@Override
+						public void run() {
+							tv.append("sender started\n");
+						}
+					});
+				}
+				//put code here
 				try {
 					Thread.sleep(Constants.fetch_interval);
 				} catch (Exception e) {
