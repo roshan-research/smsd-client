@@ -30,6 +30,7 @@ public class Smsd extends Activity {
 	Runnable senderRunnable = new SenderRunnable();
 	Thread fetcher;
 	Thread sender;
+	private MessagesDataSource datasource;
 	
     /** Called when the activity is first created. */
     @Override
@@ -41,11 +42,14 @@ public class Smsd extends Activity {
         handel = new Handler();
         fetcher = new Thread(fetcherRunnable);
         sender = new Thread(senderRunnable);
+        datasource = new MessagesDataSource(this);
+        datasource.open();
     }
     
     @Override
     public void onPause(){
     	super.onPause();
+    	datasource.close();
     	fetcher.suspend();
     	fetcher.stop();
     }
@@ -53,6 +57,7 @@ public class Smsd extends Activity {
     @Override
     public void onResume(){
     	super.onResume();
+    	datasource.open();
     	fetcher.start();
     }
     
@@ -68,6 +73,16 @@ public class Smsd extends Activity {
 						@Override
 						public void run() {
 							tv.append("fetcher started\n");
+						}
+					});
+				}
+				
+				if(i % 9 == 2){
+					final int l = datasource.getAllMessages().size();
+					handel.post(new Runnable() {
+						@Override
+						public void run() {
+							tv.append("number of messages in databse:" + l + " \n");
 						}
 					});
 				}
@@ -104,7 +119,16 @@ public class Smsd extends Activity {
 					
 					if (messages.length() > 0) {
 						for(int j = 0; j < messages.length(); j++){
+							JSONObject m_json = messages.getJSONObject(j);
+							datasource.createMessage(m_json.getString("to"), m_json.getString("text"));
 							
+							handel.post(new Runnable() {
+								
+								@Override
+								public void run() {
+									tv.append("Added 1 message to db!\n");
+								}
+							});
 						}
 					}
 				}

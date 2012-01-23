@@ -57,7 +57,7 @@ public class MessagesDataSource {
 				+ " = " + id, null);
 	}
 	
-	public List<Message> getAllComments() {
+	public List<Message> getAllMessages() {
 		List<Message> messages = new ArrayList<Message>();
 		Cursor cursor = database.query(MySQLiteHelper.TABLE_MESSAGES,
 				allColumns, null, null, null, null, null);
