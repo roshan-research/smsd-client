@@ -18,9 +18,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.telephony.SmsManager;
 import android.widget.TextView;
 
 public class Smsd extends Activity {
@@ -50,8 +53,6 @@ public class Smsd extends Activity {
     public void onPause(){
     	super.onPause();
     	datasource.close();
-    	fetcher.suspend();
-    	fetcher.stop();
     }
     
     @Override
@@ -59,6 +60,7 @@ public class Smsd extends Activity {
     	super.onResume();
     	datasource.open();
     	fetcher.start();
+    	sender.start();
     }
     
     class FetcherRunnable implements Runnable{
@@ -165,14 +167,26 @@ public class Smsd extends Activity {
 						}
 					});
 				}
-				//put code here
+				
+				List<Message> messages = datasource.getAllMessages();
+				
+				if(messages.size() > 0) {
+					Message toSend = messages.get(0);
+					sendSMS(toSend.getTo(), toSend.getMessage());
+					datasource.deleteMessage(toSend);
+				}
+				
 				try {
-					Thread.sleep(Constants.fetch_interval);
+					Thread.sleep(Constants.sender_interval);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
-    	
     }
+    private void sendSMS(String to, String text) {
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, Smsd.class), 0);                
+		SmsManager sms = SmsManager.getDefault();
+		sms.sendTextMessage(to, null, text, pi, null);
+	}
 }
