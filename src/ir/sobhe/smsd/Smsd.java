@@ -27,9 +27,7 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class Smsd extends Activity {
 	private TextView tv;
@@ -39,6 +37,9 @@ public class Smsd extends Activity {
 	Thread fetcher;
 	Thread sender;
 	private MessagesDataSource datasource;
+	
+	String SENT = "SMS_SENT";
+    String DELIVERED = "SMS_DELIVERED";
 	
     /** Called when the activity is first created. */
     @Override
@@ -51,6 +52,58 @@ public class Smsd extends Activity {
         fetcher = new Thread(fetcherRunnable);
         sender = new Thread(senderRunnable);
         datasource = new MessagesDataSource(this);
+        
+        
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+            	final String s;
+            	final long l = arg1.getExtras().getLong("id");
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        s = "SMS sent";
+                        handelSentIntentBroadcastSuccess(s, l);
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        s = "Generic failure";
+                        handelSentIntentBroadcastFail(s, l);
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        s = "No service";
+                        handelSentIntentBroadcastFail(s, l);
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        s = "Null PDU";
+                        handelSentIntentBroadcastFail(s, l);
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        s = "Radio off";
+                        handelSentIntentBroadcastFail(s, l);
+                        break;
+                }
+            }
+        }, new IntentFilter(SENT));
+        
+        //---when the SMS has been delivered---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+            	final String s;
+            	final long l = arg1.getExtras().getLong("id");
+                switch (getResultCode())
+                {
+                    case Activity.RESULT_OK:
+                        s = "SMS delivered";
+                        handelDeliveredIntentBroadcastSuccess(s, l);
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        s = "SMS not delivered";
+                        handelDeliveredIntentBroadcastFail(s, l);
+                        break;
+                }
+            }
+        }, new IntentFilter(DELIVERED));
     }
     
     @Override
@@ -63,8 +116,8 @@ public class Smsd extends Activity {
     
     @Override
     public void onPause(){
-    	super.onPause();
     	datasource.close();
+    	super.onPause();
     }
     
     @Override
@@ -96,13 +149,6 @@ public class Smsd extends Activity {
 							tv.append("number of messages in databse:" + l + " \n");
 						}
 					});
-				}
-				if(i >= 200)
-				{
-					String text = tv.getText().toString();
-					text = text.substring(text.indexOf('\n', text.length()));
-					tv.setText(text);
-					i = 50;
 				}
 				try{
 					HttpClient httpclient = new DefaultHttpClient();
@@ -188,7 +234,7 @@ public class Smsd extends Activity {
 				
 				if(messages.size() > 0) {
 					Message toSend = messages.get(0);
-					sendSMS(toSend.getTo(), toSend.getMessage());
+					sendSMS(toSend.getTo(), toSend.getMessage(), toSend.getId());
 					datasource.deleteMessage(toSend);
 				}
 				
@@ -201,82 +247,62 @@ public class Smsd extends Activity {
 		}
     }
     
-    private void sendSMS(String to, String text) {
-    	
-    	String SENT = "SMS_SENT";
-        String DELIVERED = "SMS_DELIVERED";
+    private void sendSMS(String to, String text, long id) {        
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, new Intent(SENT).putExtra("id", id), PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0, new Intent(DELIVERED).putExtra("id", id), PendingIntent.FLAG_UPDATE_CURRENT);
         
-        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, new Intent(SENT), 0);
-        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0, new Intent(DELIVERED), 0);
-        
-        registerReceiver(new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context arg0, Intent arg1) {
-            	final String s;
-                switch (getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        s = "SMS sent";
-                        handelIntentBroadcast(s);
-                        break;
-                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                        s = "Generic failure";
-                        handelIntentBroadcast(s);
-                        break;
-                    case SmsManager.RESULT_ERROR_NO_SERVICE:
-                        s = "No service";
-                        handelIntentBroadcast(s);
-                        break;
-                    case SmsManager.RESULT_ERROR_NULL_PDU:
-                        s = "Null PDU";
-                        handelIntentBroadcast(s);
-                        break;
-                    case SmsManager.RESULT_ERROR_RADIO_OFF:
-                        s = "Radio off";
-                        handelIntentBroadcast(s);
-                        break;
-                }
-            }
-        }, new IntentFilter(SENT));
-        
-        //---when the SMS has been delivered---
-        registerReceiver(new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context arg0, Intent arg1) {
-            	final String s;
-                switch (getResultCode())
-                {
-                    case Activity.RESULT_OK:
-                        s = "SMS delivered";
-                        handelIntentBroadcast(s);
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        s = "SMS not delivered";
-                        handelIntentBroadcast(s);
-                        break;
-                }
-            }
-        }, new IntentFilter(DELIVERED));
-    	
 		SmsManager sms = SmsManager.getDefault();
 		ArrayList<String> messages = sms.divideMessage(text);
 		
 		//number of messages
 		int nom = messages.size();
-		ArrayList<PendingIntent> sendIntents = new ArrayList<PendingIntent>(nom);
-		ArrayList<PendingIntent> deliverIntents = new ArrayList<PendingIntent>(nom);
+		ArrayList<PendingIntent> sendIntents = new ArrayList<PendingIntent>();
+		ArrayList<PendingIntent> deliverIntents = new ArrayList<PendingIntent>();
 		
 		for (int i = 0; i < nom; i++) {
-			sendIntents.add(sentPI);
-			deliverIntents.add(deliveredPI);
+			if(i == nom-1){
+				sendIntents.add(sentPI);
+				deliverIntents.add(deliveredPI);
+			}
+			else{
+				sendIntents.add(null);
+				deliverIntents.add(null);
+			}
 		}
 		sms.sendMultipartTextMessage(to, null, messages, sendIntents, deliverIntents);
 	}
     
-    public void handelIntentBroadcast(final String s) {
-    	Log.w("SMTHNG", s);
+    //TODO: Do something other than logging into display in case of failure
+    public void handelSentIntentBroadcastFail(final String s, final long l) {
     	handel.post(new Runnable() {
-            
+            @Override
+            public void run() {
+                tv.append(s + "\n");
+            }
+        });
+    }
+    
+    public void handelSentIntentBroadcastSuccess(final String s, final long l) {
+    	handel.post(new Runnable() {
+            @Override
+            public void run() {
+                tv.append(s + "\n");
+            }
+        });
+    }
+    
+  //TODO: Do something other than logging into display in case of failure
+    public void handelDeliveredIntentBroadcastFail(final String s, final long l) {
+    	handel.post(new Runnable() {
+            @Override
+            public void run() {
+                tv.append(s + "\n");
+            }
+        });
+    }
+    
+    public void handelDeliveredIntentBroadcastSuccess(final String s, final long l) {
+    	handel.post(new Runnable() {
             @Override
             public void run() {
                 tv.append(s + "\n");
