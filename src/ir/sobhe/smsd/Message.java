@@ -4,6 +4,14 @@ public class Message {
 	private long id;
 	private String to;
 	private String message;
+	private long orig_id;
+	
+	public long getOrig_id() {
+		return orig_id;
+	}
+	public void setOrig_id(long orig_id) {
+		this.orig_id = orig_id;
+	}
 	public long getId() {
 		return id;
 	}

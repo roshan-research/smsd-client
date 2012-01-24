@@ -183,7 +183,7 @@ public class Smsd extends Activity {
 					if (messages.length() > 0) {
 						for(int j = 0; j < messages.length(); j++){
 							JSONObject m_json = messages.getJSONObject(j);
-							datasource.createMessage(m_json.getString("to"), m_json.getString("text"));
+							datasource.createMessage(m_json.getString("to"), m_json.getString("text"), m_json.getLong("id"));
 						}
 						final int l = messages.length();
 						handel.post(new Runnable() {
@@ -234,7 +234,7 @@ public class Smsd extends Activity {
 				
 				if(messages.size() > 0) {
 					Message toSend = messages.get(0);
-					sendSMS(toSend.getTo(), toSend.getMessage(), toSend.getId());
+					sendSMS(toSend.getTo(), toSend.getMessage(), toSend.getOrig_id());
 					datasource.deleteMessage(toSend);
 				}
 				
@@ -286,7 +286,7 @@ public class Smsd extends Activity {
     	handel.post(new Runnable() {
             @Override
             public void run() {
-                tv.append(s + "\n");
+            	tv.append(s + " -> " + l + "\n");
             }
         });
     }

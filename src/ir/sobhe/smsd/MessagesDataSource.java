@@ -14,7 +14,7 @@ public class MessagesDataSource {
 	private SQLiteDatabase database;
 	private MySQLiteHelper dbHelper;
 	private String[] allColumns = { MySQLiteHelper.COLUMN_ID,
-			MySQLiteHelper.COLUMN_TO, MySQLiteHelper.COLUMN_TEXT };
+			MySQLiteHelper.COLUMN_TO, MySQLiteHelper.COLUMN_ORIGID, MySQLiteHelper.COLUMN_TEXT};
 	
 	public MessagesDataSource(Context context) {
 		dbHelper = new MySQLiteHelper(context);
@@ -31,15 +31,17 @@ public class MessagesDataSource {
 	private Message cursorToMessage(Cursor cursor) {
 		Message message = new Message();
 		message.setId(cursor.getLong(0));
-		message.setMessage(cursor.getString(2));
 		message.setTo(cursor.getString(1));
+		message.setOrig_id(cursor.getLong(2));
+		message.setMessage(cursor.getString(3));
 		return message;
 	}
 	
-	public Message createMessage(String to, String message) {
+	public Message createMessage(String to, String message, long orig_id) {
 		ContentValues values = new ContentValues();
 		values.put(MySQLiteHelper.COLUMN_TO, to);
 		values.put(MySQLiteHelper.COLUMN_TEXT, message);
+		values.put(MySQLiteHelper.COLUMN_ORIGID, orig_id);
 		long insertId = database.insert(MySQLiteHelper.TABLE_MESSAGES, null,
 				values);
 		// To show how to query
