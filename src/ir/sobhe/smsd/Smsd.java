@@ -18,8 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -46,7 +44,14 @@ public class Smsd extends Activity {
         fetcher = new Thread(fetcherRunnable);
         sender = new Thread(senderRunnable);
         datasource = new MessagesDataSource(this);
-        datasource.open();
+    }
+    
+    @Override
+    public void onResume(){
+    	super.onResume();
+    	datasource.open();
+    	fetcher.start();
+    	sender.start();
     }
     
     @Override
@@ -56,11 +61,8 @@ public class Smsd extends Activity {
     }
     
     @Override
-    public void onResume(){
-    	super.onResume();
-    	datasource.open();
-    	fetcher.start();
-    	sender.start();
+    public void onDestroy(){
+    	super.onDestroy();
     }
     
     class FetcherRunnable implements Runnable{
@@ -111,7 +113,6 @@ public class Smsd extends Activity {
 						
 						@Override
 						public void run() {
-							tv.append("Response: \n");
 							tv.append(responseString + "\n");
 						}
 					});
@@ -142,6 +143,8 @@ public class Smsd extends Activity {
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
+				
+				
 				try {
 					Thread.sleep(Constants.fetch_interval);
 				} catch (Exception e) {
@@ -185,8 +188,8 @@ public class Smsd extends Activity {
 		}
     }
     private void sendSMS(String to, String text) {
-		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, Smsd.class), 0);                
 		SmsManager sms = SmsManager.getDefault();
-		sms.sendTextMessage(to, null, text, pi, null);
+		ArrayList<String> messages = sms.divideMessage(text);
+		sms.sendMultipartTextMessage(to, null, messages, null, null);
 	}
 }
