@@ -90,6 +90,13 @@ public class Smsd extends Activity {
 						}
 					});
 				}
+				if(i >= 200)
+				{
+					String text = (String) tv.getText();
+					text = text.substring(text.indexOf('\n', text.length()));
+					tv.setText(text);
+					i = 50;
+				}
 				try{
 					HttpClient httpclient = new DefaultHttpClient();
 			    	HttpPost httppost = new HttpPost(Constants.fetch_url);
@@ -187,6 +194,7 @@ public class Smsd extends Activity {
 			}
 		}
     }
+    
     private void sendSMS(String to, String text) {
 		SmsManager sms = SmsManager.getDefault();
 		ArrayList<String> messages = sms.divideMessage(text);
