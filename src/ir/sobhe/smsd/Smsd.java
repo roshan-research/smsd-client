@@ -53,7 +53,6 @@ public class Smsd extends Activity {
         sender = new Thread(senderRunnable);
         datasource = new MessagesDataSource(this);
         
-        
         registerReceiver(new BroadcastReceiver(){
             @Override
             public void onReceive(Context arg0, Intent arg1) {
@@ -195,6 +194,9 @@ public class Smsd extends Activity {
 						});
 					}
 				}
+				catch(ClassCastException e){
+					e.printStackTrace();
+				}
 				catch(ClientProtocolException e){
 					e.printStackTrace();
 				}
@@ -283,12 +285,22 @@ public class Smsd extends Activity {
     }
     
     public void handelSentIntentBroadcastSuccess(final String s, final long l) {
-    	handel.post(new Runnable() {
-            @Override
-            public void run() {
-            	tv.append(s + " -> " + l + "\n");
-            }
-        });
+    	try{
+			HttpClient httpclient = new DefaultHttpClient();
+	    	HttpPost httppost = new HttpPost(Constants.sent_url);
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
+			nameValuePairs.add(new BasicNameValuePair("name", "htc-tatto"));
+			nameValuePairs.add(new BasicNameValuePair("key", "2f1a5ee55fe8435b6aa82782d318f5e2"));
+			nameValuePairs.add(new BasicNameValuePair("ids", new Long(l).toString()));
+			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			httpclient.execute(httppost);
+		}
+		catch(ClientProtocolException e){
+			e.printStackTrace();
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
     }
     
   //TODO: Do something other than logging into display in case of failure
@@ -302,11 +314,21 @@ public class Smsd extends Activity {
     }
     
     public void handelDeliveredIntentBroadcastSuccess(final String s, final long l) {
-    	handel.post(new Runnable() {
-            @Override
-            public void run() {
-                tv.append(s + "\n");
-            }
-        });
+    	try{
+			HttpClient httpclient = new DefaultHttpClient();
+	    	HttpPost httppost = new HttpPost(Constants.delivered_url);
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
+			nameValuePairs.add(new BasicNameValuePair("name", "htc-tatto"));
+			nameValuePairs.add(new BasicNameValuePair("key", "2f1a5ee55fe8435b6aa82782d318f5e2"));
+			nameValuePairs.add(new BasicNameValuePair("ids", new Long(l).toString()));
+			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			httpclient.execute(httppost);
+		}
+		catch(ClientProtocolException e){
+			e.printStackTrace();
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
     }
 }
