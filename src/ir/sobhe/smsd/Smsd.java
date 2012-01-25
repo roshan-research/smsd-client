@@ -1,10 +1,8 @@
 package ir.sobhe.smsd;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -153,21 +151,13 @@ public class Smsd extends Activity {
 					HttpClient httpclient = new DefaultHttpClient();
 			    	HttpPost httppost = new HttpPost(Constants.fetch_url);
 					List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-					nameValuePairs.add(new BasicNameValuePair("name", "htc-tatto"));
-					nameValuePairs.add(new BasicNameValuePair("key", "2f1a5ee55fe8435b6aa82782d318f5e2"));
+					nameValuePairs.add(new BasicNameValuePair("name", Constants.name));
+					nameValuePairs.add(new BasicNameValuePair("key", Constants.key));
 					httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 					HttpResponse response = httpclient.execute(httppost);
 					
-					InputStream reponseStream = response.getEntity().getContent();
-					Scanner in = new Scanner(reponseStream);
+					final String responseString = Constants.httpResponseToString(response);
 					
-					String tempString = "";
-					
-					while(in.hasNext()){
-						tempString += in.nextLine();
-					}
-					
-					final String responseString = tempString;
 					handel.post(new Runnable() {
 						
 						@Override
@@ -289,8 +279,8 @@ public class Smsd extends Activity {
 			HttpClient httpclient = new DefaultHttpClient();
 	    	HttpPost httppost = new HttpPost(Constants.sent_url);
 			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
-			nameValuePairs.add(new BasicNameValuePair("name", "htc-tatto"));
-			nameValuePairs.add(new BasicNameValuePair("key", "2f1a5ee55fe8435b6aa82782d318f5e2"));
+			nameValuePairs.add(new BasicNameValuePair("name", Constants.name));
+			nameValuePairs.add(new BasicNameValuePair("key", Constants.key));
 			nameValuePairs.add(new BasicNameValuePair("ids", new Long(l).toString()));
 			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 			httpclient.execute(httppost);
