@@ -2,18 +2,14 @@ package ir.sobhe.smsd;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-
+import org.json.JSONException;
+import org.json.JSONObject;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -45,14 +41,13 @@ public class SmsReceiver extends BroadcastReceiver{
 				//Make HTTP POST
 				HttpClient httpclient = new DefaultHttpClient();
 		    	HttpPost httppost = new HttpPost(Constants.tell_received_url);
-				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
-				nameValuePairs.add(new BasicNameValuePair("name", Constants.name));
-				nameValuePairs.add(new BasicNameValuePair("key", Constants.key));
-				nameValuePairs.add(new BasicNameValuePair("from", from));
-				nameValuePairs.add(new BasicNameValuePair("text", text));
-				UrlEncodedFormEntity urfe = new UrlEncodedFormEntity(nameValuePairs);
-				urfe.setContentEncoding("");
-				httppost.setEntity(urfe);
+				JSONObject postData = new JSONObject();
+				postData.put("name", Constants.name);
+				postData.put("key", Constants.key);
+				postData.put("from", from);
+				postData.put("text", text);
+				StringEntity se = new StringEntity(postData.toString(), "UTF-8");
+				httppost.setEntity(se);
 				HttpResponse response = httpclient.execute(httppost);
 				
 				String responseString = Constants.httpResponseToString(response);
@@ -66,6 +61,9 @@ public class SmsReceiver extends BroadcastReceiver{
 				e.printStackTrace();
 			}
 			catch(IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

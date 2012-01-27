@@ -101,19 +101,21 @@ public class Smsd extends Activity {
                 }
             }
         }, new IntentFilter(DELIVERED));
+        
+        datasource.open();
     }
     
     @Override
     public void onResume(){
     	super.onResume();
-    	datasource.open();
+    	
     	fetcher.start();
     	sender.start();
     }
     
     @Override
     public void onPause(){
-    	datasource.close();
+//    	datasource.close();
     	super.onPause();
     }
     
