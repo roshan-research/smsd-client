@@ -7,12 +7,12 @@ import java.util.Scanner;
 import org.apache.http.HttpResponse;
 
 public class Constants {
-	public static final String flask = "http://192.168.1.53:5000/";
+	public static final String flask = "http://192.168.1.3:5000/";
 	public static final String fetch_url = flask + "get/";
 	public static final String sent_url = flask + "sent/";
 	public static final String delivered_url = flask + "delivered/";
 	public static final String tell_received_url = flask + "r/";
-//	public static final String tell_received_url = "http://192.168.1.53:1337/";
+	public static final String tell_rang_url = flask + "ranged/";
 	public static final int fetch_interval = 1000;
 	public static final int sender_interval = 100;
 	
